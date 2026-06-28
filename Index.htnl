@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>වාෂ්ප හා ආර්ද්‍රතාමිතිය — අන්තර්ක්‍රියාකාරී ආදර්ශන</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+ --bg:#10141b; --panel:#1a2029; --soft:#202733; --text:#e8ecf3; --sub:#9aa6b5;
+ --bord:#2c333f; --bordS:#444e5c; --vapor:#5aa1e8; --water:#3b8fd6; --sat:#e7763f; --line:#7c8696;
+ --accent:#5aa1e8;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+ font-family:"Noto Sans Sinhala",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.55;font-size:17px}
+.wrap{max-width:1320px;margin:0 auto;padding:30px 24px 64px}
+header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
+h1{font-size:30px;font-weight:600;margin:0}
+.sub{color:var(--sub);font-size:16px;margin:4px 0 24px}
+.brand{font-size:clamp(15px,2.2vw,20px);font-weight:600;color:#cfe3fb;letter-spacing:.3px;
+ background:linear-gradient(90deg,rgba(90,161,232,.22),rgba(90,161,232,.02));
+ border:1px solid var(--bordS);border-left:4px solid var(--accent);border-radius:12px;
+ padding:12px 18px;margin:0 0 16px;display:flex;align-items:center;gap:12px}
+.brand svg{flex-shrink:0}
+.brand b{color:var(--accent)}
+.tabs{display:flex;gap:12px;margin-bottom:22px;flex-wrap:wrap}
+.tab{flex:1 1 300px;background:var(--panel);border:1px solid var(--bord);color:var(--text);
+ border-radius:13px;padding:16px 18px;font:inherit;font-size:16px;font-weight:500;cursor:pointer;text-align:left;transition:.15s}
+.tab small{display:block;color:var(--sub);font-weight:400;font-size:13.5px;margin-top:3px}
+.tab.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.pane{display:none}
+.pane.on{display:block}
+.row{display:flex;flex-wrap:wrap;gap:18px}
+.scene,.graph{flex:1 1 380px;min-width:0;background:var(--soft);border:1px solid var(--bord);border-radius:16px;overflow:hidden}
+.scene canvas{display:block;width:100%;height:clamp(360px,42vw,520px)}
+.graph canvas{display:block;width:100%;height:clamp(340px,40vw,500px)}
+.cap{font-size:13.5px;color:var(--sub);text-align:center;padding:7px 10px 12px}
+.leg{display:flex;flex-wrap:wrap;gap:20px;font-size:14px;color:var(--sub);margin-top:16px}
+.leg span{display:inline-flex;align-items:center;gap:8px}
+.dot{width:15px;height:15px;border-radius:4px;display:inline-block}
+.lin{width:18px;height:0;border-top:2px solid;display:inline-block}
+.stats{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:10px;margin:22px 0 0}
+.chip{background:var(--panel);border:1px solid var(--bord);border-radius:11px;padding:11px 12px;min-width:0}
+.chip .k{font-size:12px;color:var(--sub);display:block;line-height:1.3}
+.chip .v{font-size:19px;font-weight:600;white-space:nowrap;margin-top:2px}
+.ctrl{display:flex;flex-wrap:wrap;align-items:center;gap:14px;background:var(--panel);
+ border:1px solid var(--bord);border-radius:14px;padding:16px 18px;margin-bottom:18px}
+.ctrl button{background:var(--soft);border:1px solid var(--bordS);color:var(--text);border-radius:10px;
+ padding:12px 20px;font:inherit;font-size:16px;cursor:pointer;transition:.15s}
+.ctrl button:hover{border-color:var(--accent)}
+.ctrl button:active{transform:scale(.98)}
+.ctrl #pyA,.ctrl #pyB{background:var(--accent);border-color:var(--accent);color:#0c1320;font-weight:600}
+.ctrl label{display:flex;align-items:center;gap:11px;flex:1 1 300px;font-size:15.5px;color:var(--sub)}
+.ctrl input[type=range]{flex:1;accent-color:var(--accent);height:6px}
+.ctrl .val{min-width:72px;color:var(--text);font-weight:600;font-size:16px}
+@media(max-width:780px){
+ .stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .chip .v{font-size:17px}
+ h1{font-size:24px}
+ body{font-size:16px}
+}
+@media(max-width:480px){
+ .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .wrap{padding:20px 14px 48px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+ <div class="brand">
+  <svg viewBox="0 0 512 512" width="36" height="36" aria-label="AP.LK">
+   <g fill="#fff"><path d="M256 502.5C120.08 502.5 9.5 391.92 9.5 256 9.5 120.08 120.08 9.5 256 9.5c135.92 0 246.5 110.58 246.5 246.5 0 135.92-110.58 246.5-246.5 246.5z"/><path d="M256 19C125.318 19 19 125.318 19 256c0 130.682 106.318 237 237 237 130.682 0 237-106.318 237-237 0-130.682-106.318-237-237-237m0-19c141.385 0 256 114.615 256 256S397.385 512 256 512 0 397.385 0 256 114.615 0 256 0z" fill="#36a9e1"/></g>
+   <path d="M89 28.9v28.9L65.75 70.781 42.5 83.765l-21 12.063-21 12.063v54.478l5.5 3.149 5.5 3.149L55 193.729l43.5 25.063 22 12.492 22 12.491.5 67.839.5 67.839 12.5 7.079 12.5 7.079 9.75 5.263 9.75 5.263.244-121.819.245-121.818-.38-80-.379-80-.219-.271-.219-.27L166.4 11.581 145.5 23.2l-1.25 1.021-1.25 1.024v164.846l-10.79-5.8-10.791-5.791L83.234 157l-38.185-21.5v-1l7.729-4.361 7.728-4.361L85 112.041 109.5 98.3l12.75-7.272L135 83.759V25.245l-1.25-1.026-1.25-1.025L111.711 11.6 90.923 0H89v28.9M.439 135v27.5l.309-13.75.308-13.75-.308-13.75-.309-13.75V135" fill="#040404" fill-rule="evenodd" transform="translate(116 59.041)"/>
+  </svg>
+  <span><b>ජීවිතයට Physics</b> වාෂ්ප Simulator App</span>
+ </div>
+ <header>
+  <div>
+   <h1>වාෂ්ප හා ආර්ද්‍රතාමිතිය</h1>
+  </div>
+ </header>
+ <p class="sub">Practical ආදර්ශන දෙක — Play කරන්න, නැත්නම් slider එක ඇදලා අතින් පෙන්වන්න.</p>
+
+ <div class="tabs">
+  <button class="tab on" data-pane="A">නියත උෂ්ණත්වය · පරිමාව වෙනස් කරයි<small>නියත උෂ්ණත්වයේ · පිස්ටනය මගින් සම්පීඩනය</small></button>
+  <button class="tab" data-pane="B">නියත පරිමාව · උෂ්ණත්වය වෙනස් කරයි<small>10 m³ නියතව · සිසිල් කිරීම</small></button>
+ </div>
+
+ <section class="pane on" id="paneA">
+  <div class="ctrl">
+   <button id="pyA">▶ ධාවනය</button>
+   <button id="rsA">↺ යළි</button>
+   <button id="tgA">Hide Graph</button>
+   <label>පරිමාව <input type="range" id="slA" min="1" max="10" step="0.05" value="10"><span class="val" id="slvA"></span></label>
+  </div>
+  <div class="row">
+   <div class="scene"><canvas id="scA"></canvas><div class="cap">පිස්ටනය පහළට → පරිමාව අඩු වෙයි</div></div>
+   <div class="graph"><canvas id="grA"></canvas><div class="cap">P – පරිමාව ප්‍රස්තාරය · V ≤ 5 m³ දී පීඩනය නියතයි</div></div>
+  </div>
+  <div class="leg">
+   <span><i class="dot" style="background:var(--vapor)"></i>ජල වාෂ්ප අංශු</span>
+   <span><i class="dot" style="background:var(--water)"></i>ඝනීභවනය වූ ජලය</span>
+   <span><i class="dot" style="background:var(--sat)"></i>සන්තෘප්ත කලාපය (V ≤ 5 m³)</span>
+  </div>
+  <div class="stats" id="stA"></div>
+ </section>
+
+ <section class="pane" id="paneB">
+  <div class="ctrl">
+   <button id="pyB">▶ ධාවනය</button>
+   <button id="rsB">↺ යළි</button>
+   <button id="tgB">Hide Graph</button>
+   <label>උෂ්ණත්වය <input type="range" id="slB" min="10" max="50" step="0.1" value="50"><span class="val" id="slvB"></span></label>
+  </div>
+  <div class="row">
+   <div class="scene"><canvas id="scB"></canvas><div class="cap">පරිමාව නියතයි · උෂ්ණත්වය පහළට යයි</div></div>
+   <div class="graph"><canvas id="grB"></canvas><div class="cap">P – උෂ්ණත්ව ප්‍රස්තාරය · තිත් රේඛාව −273°C දී 0 වෙයි</div></div>
+  </div>
+  <div class="leg">
+   <span><i class="dot" style="background:var(--vapor)"></i>සිසිල් වාෂ්ප අංශු</span>
+   <span><i class="dot" style="background:var(--water)"></i>ඝනීභවනය වූ ජලය</span>
+   <span><i class="lin" style="border-color:var(--line);border-top-style:dashed"></i>අසන්තෘප්ත නියමය (P ∝ T)</span>
+   <span><i class="lin" style="border-color:var(--sat)"></i>සන්තෘප්ත වක්‍රය</span>
+  </div>
+  <div class="stats" id="stB"></div>
+ </section>
+
+</div>
+
+<script>
+function css(n){return getComputedStyle(document.body).getPropertyValue(n).trim();}
+function ctxOf(c){var r=c.getBoundingClientRect();if(r.width<10)return null;var dp=Math.min(devicePixelRatio||1,2),W=Math.round(r.width*dp),H=Math.round(r.height*dp);if(c.width!==W||c.height!==H){c.width=W;c.height=H;}var x=c.getContext('2d');x.setTransform(dp,0,0,dp,0,0);return{x:x,w:r.width,h:r.height};}
+function chip(k,v){return '<div class="chip"><span class="k">'+k+'</span><span class="v">'+v+'</span></div>';}
+// labelled arrow: (lx,ly)=text anchor at left, (tx,ty)=arrow target (a particle)
+function arrow(x,lx,ly,tx,ty,label,color){
+ x.font='700 13px "Noto Sans Sinhala",sans-serif';x.textBaseline='middle';x.textAlign='left';
+ var tw2=x.measureText(label).width;
+ x.fillStyle='rgba(16,20,27,0.82)';x.fillRect(lx-3,ly-10,tw2+6,20);
+ x.fillStyle=color;x.fillText(label,lx,ly);
+ var sx=lx+tw2+7;
+ x.strokeStyle=color;x.fillStyle=color;x.lineWidth=2;
+ x.beginPath();x.moveTo(sx,ly);x.lineTo(tx,ty);x.stroke();
+ var a=Math.atan2(ty-ly,tx-sx);
+ x.beginPath();x.moveTo(tx,ty);x.lineTo(tx-10*Math.cos(a-0.42),ty-10*Math.sin(a-0.42));x.lineTo(tx-10*Math.cos(a+0.42),ty-10*Math.sin(a+0.42));x.closePath();x.fill();
+ x.textBaseline='alphabetic';
+}
+
+/* ---------- A: constant temperature, changing volume ---------- */
+(function(){
+ var sc=document.getElementById('scA'),gr=document.getElementById('grA'),stEl=document.getElementById('stA');
+ var py=document.getElementById('pyA'),rs=document.getElementById('rsA'),sl=document.getElementById('slA'),slv=document.getElementById('slvA');
+ var tg=document.getElementById('tgA'),graphDiv=document.querySelector('#paneA .graph'),gHidden=false;
+ var N=100;
+ function st(V){var m=10*V,vp,wt;if(m>=50){vp=50;wt=0;}else{vp=m;wt=50-m;}var d=vp/V;return{V:V,vp:vp,wt:wt,d:d,P:d,sat:m<50};}
+ var V=10,play=false,lastF=performance.now(),curVap=N;
+ // fixed pool of N molecules (conservation of mass)
+ var mols=[];for(var k=0;k<N;k++)mols.push({x:0,y:0,vx:(Math.random()*2-1)*55,vy:(Math.random()*2-1)*55,state:'vapor',seed:false});
+ function scene(dt){var o=ctxOf(sc);if(!o)return;var x=o.x,w=o.w,h=o.h;x.clearRect(0,0,w,h);var s=st(V);
+  var cw=Math.min(w*0.66,260),cx=w/2,iL=cx-cw/2,iR=cx+cw/2,floor=h-28,topMax=24,Hmax=floor-topMax;
+  var colH=(V/10)*Hmax,pistY=floor-colH,wH=Math.min(colH*0.8,(s.wt/40)*colH*0.85),wSurf=floor-wH;
+  x.strokeStyle=css('--bordS');x.lineWidth=2;x.beginPath();x.moveTo(iL-3,topMax-8);x.lineTo(iL-3,floor);x.lineTo(iR+3,floor);x.lineTo(iR+3,topMax-8);x.stroke();
+  var gt=pistY+11,gb=Math.max(gt+2,wSurf-3);
+  if(s.sat){x.fillStyle=css('--sat');x.globalAlpha=.10;x.fillRect(iL,gt,iR-iL,gb-gt);x.globalAlpha=1;}
+  if(wH>0.5){x.fillStyle=css('--water');x.globalAlpha=.85;x.fillRect(iL,wSurf,iR-iL,floor-wSurf);x.globalAlpha=1;}
+  // total water mass is constant (50 g) -> split N particles by vapor fraction
+  var vap=Math.round(s.vp/50*N);curVap=vap;
+  var wt0=Math.max(wSurf+4,floor-wH+4),wb=floor-4;
+  for(var i=0;i<mols.length;i++){var m=mols[i];var want=(i<vap)?'vapor':'liquid';
+   if(m.state!==want){m.state=want;
+    if(want==='vapor'){m.x=iL+4+Math.random()*(iR-iL-8);m.y=gt+Math.random()*(gb-gt);m.vx=(Math.random()*2-1)*55;m.vy=(Math.random()*2-1)*55;}
+    else{m.x=iL+4+Math.random()*(iR-iL-8);m.y=wt0+Math.random()*Math.max(1,wb-wt0);}
+   }
+   if(m.state==='vapor'){m.x+=m.vx*dt;m.y+=m.vy*dt;
+    if(m.x<iL+4){m.x=iL+4;m.vx*=-1;}if(m.x>iR-4){m.x=iR-4;m.vx*=-1;}
+    if(m.y<gt){m.y=gt;m.vy*=-1;}if(m.y>gb){m.y=gb;m.vy*=-1;}
+    x.fillStyle=css('--vapor');
+   }else{ // liquid: gentle jiggle, constrained to water band
+    m.x+=(Math.random()*2-1)*7*dt*8;m.y+=(Math.random()*2-1)*7*dt*8;
+    if(m.x<iL+4)m.x=iL+4;if(m.x>iR-4)m.x=iR-4;
+    if(m.y<wt0)m.y=wt0;if(m.y>wb)m.y=wb;
+    x.fillStyle=css('--water');
+   }
+   x.beginPath();x.arc(m.x,m.y,3,0,7);x.fill();}
+  // label arrows pointing at the particles
+  var vY=gt+(gb-gt)*0.35;arrow(x,10,vY,iL+28,vY+6,'ජල වාෂ්ප අංශු',css('--vapor'));
+  if(wH>4){var lY=wSurf+(floor-wSurf)/2;arrow(x,10,lY,iL+28,lY,'ඝනීභවනය වූ ජලය',css('--water'));}
+  x.fillStyle=css('--bordS');x.fillRect(iL-4,pistY-6,iR-iL+8,7);x.fillRect(cx-3,pistY-26,6,21);x.fillRect(cx-16,pistY-30,32,6);
+ }
+ function graph(){var o=ctxOf(gr);if(!o)return;var x=o.x,w=o.w,h=o.h;x.clearRect(0,0,w,h);
+  var L=44,R=w-14,T=14,B=h-32,mX=function(v){return L+(v/10)*(R-L);},mY=function(p){return B-(p/12)*(B-T);};
+  x.fillStyle=css('--sat');x.globalAlpha=.08;x.fillRect(mX(0),T,mX(5)-mX(0),B-T);x.globalAlpha=1;
+  x.strokeStyle=css('--bordS');x.lineWidth=1.5;x.beginPath();x.moveTo(L,T);x.lineTo(L,B);x.lineTo(R,B);x.stroke();
+  x.fillStyle=css('--sub');x.font='11px sans-serif';x.textAlign='center';
+  for(var v=0;v<=10;v+=2){var px=mX(v);x.strokeStyle=css('--bordS');x.beginPath();x.moveTo(px,B);x.lineTo(px,B+4);x.stroke();x.fillText(v,px,B+15);}
+  x.textAlign='right';
+  for(var p=0;p<=12;p+=4){var py2=mY(p);x.beginPath();x.moveTo(L,py2);x.lineTo(L-4,py2);x.stroke();x.fillText(p,L-7,py2+3);}
+  x.strokeStyle=css('--sat');x.setLineDash([5,4]);x.beginPath();x.moveTo(mX(5),T);x.lineTo(mX(5),B);x.stroke();x.setLineDash([]);
+  x.strokeStyle=css('--vapor');x.lineWidth=2.4;x.beginPath();var f=true;
+  for(var vv=10;vv>=1;vv-=0.1){var pp=(vv>=5)?50/vv:10,ax=mX(vv),ay=mY(pp);if(f){x.moveTo(ax,ay);f=false;}else x.lineTo(ax,ay);}x.stroke();
+  var s=st(V),dx=mX(V),dy=mY(s.P);x.fillStyle=css('--sat');x.beginPath();x.arc(dx,dy,5,0,7);x.fill();x.strokeStyle=css('--text');x.lineWidth=1;x.stroke();
+  x.fillStyle=css('--sub');x.font='11px sans-serif';x.textAlign='center';x.fillText('පරිමාව (m³)',(L+R)/2,h-5);
+  x.save();x.translate(12,(T+B)/2);x.rotate(-Math.PI/2);x.fillText('වාෂ්ප පීඩනය (P)',0,0);x.restore();
+ }
+ function stats(){var s=st(V);stEl.innerHTML=chip('පරිමාව',s.V.toFixed(1)+' m³')+chip('වාෂ්ප ස්කන්ධය',Math.round(s.vp)+' g')+chip('ජල ස්කන්ධය',Math.round(s.wt)+' g')+chip('ඝනත්වය',s.d.toFixed(1)+' g/m³')+chip('උපරිම වාෂ්ප ඝනත්වය','10 g/m³')+chip('වාෂ්ප පීඩනය P',s.P.toFixed(1))+chip('වාෂ්ප අංශු',curVap)+chip('ජල අංශු',(N-curVap))+chip('තත්ත්වය',s.sat?'සන්තෘප්ත':'අසන්තෘප්ත');slv.textContent=s.V.toFixed(1)+' m³';}
+ function btn(){py.textContent=play?'❚❚ විරාමය':'▶ ධාවනය';}
+ function loop(){var now=performance.now(),dt=Math.min(0.05,(now-lastF)/1000);if(play){V-=dt*1.5;if(V<=1){V=1;play=false;btn();}sl.value=V;}scene(dt);if(!gHidden)graph();stats();lastF=now;requestAnimationFrame(loop);}
+ py.onclick=function(){if(V<=1)V=10;play=!play;btn();};
+ rs.onclick=function(){V=10;play=false;btn();sl.value=10;};
+ sl.oninput=function(){V=+sl.value;play=false;btn();};
+ tg.onclick=function(){gHidden=!gHidden;graphDiv.style.display=gHidden?'none':'';tg.textContent=gHidden?'Show Graph':'Hide Graph';};
+ btn();requestAnimationFrame(loop);
+})();
+
+/* ---------- B: constant volume, changing temperature ---------- */
+(function(){
+ var sc=document.getElementById('scB'),gr=document.getElementById('grB'),stEl=document.getElementById('stB');
+ var py=document.getElementById('pyB'),rs=document.getElementById('rsB'),sl=document.getElementById('slB'),slv=document.getElementById('slvB');
+ var tg=document.getElementById('tgB'),graphDiv=document.querySelector('#paneB .graph'),gHidden=false;
+ var N=100,AVAIL=30.4,KP=0.0097; // available vapor density (g/m³) & pressure scale
+ // realistic saturation vapor densities (g/m³) — Clausius–Clapeyron curve
+ var pts=[[50,83.0],[40,51.1],[30,30.4],[20,17.3],[10,9.4],[0,4.85]];
+ function maxDens(T){if(T>=50)return 83.0;if(T<=0)return 4.85;for(var i=0;i<pts.length-1;i++){var t1=pts[i][0],d1=pts[i][1],t2=pts[i+1][0],d2=pts[i+1][1];if(T<=t1&&T>=t2){var f=(T-t2)/(t1-t2);return d2+(d1-d2)*f;}}return 30.4;}
+ function st(T){var d=Math.min(maxDens(T),AVAIL),frac=d/AVAIL,vp=frac*100,wt=100-vp;return{T:T,vp:vp,wt:wt,d:d,P:d*(T+273)*KP,sat:maxDens(T)<AVAIL};}
+ function lerp(a,b,t){return a+(b-a)*t;}
+ function molCol(T){var t=Math.max(0,Math.min(1,(T-10)/40));return 'rgb('+Math.round(lerp(55,216,t))+','+Math.round(lerp(138,90,t))+','+Math.round(lerp(221,48,t))+')';}
+ var T=50,play=false,lastF=performance.now(),curVap=N;
+ var mols=[];for(var k=0;k<N;k++){var a0=Math.random()*6.28;mols.push({x:0,y:0,vx:Math.cos(a0),vy:Math.sin(a0),state:'vapor'});}
+ function scene(dt){var o=ctxOf(sc);if(!o)return;var x=o.x,w=o.w,h=o.h;x.clearRect(0,0,w,h);var s=st(T);
+  var cw=Math.min(w*0.54,210),cx=w*0.38,iL=cx-cw/2,iR=cx+cw/2,floor=h-28,top=26,Hc=floor-top;
+  var wH=Math.min(Hc*0.8,(s.wt/60)*Hc*0.8),wSurf=floor-wH;
+  x.strokeStyle=css('--bordS');x.lineWidth=2;x.beginPath();x.moveTo(iL-3,top);x.lineTo(iL-3,floor);x.lineTo(iR+3,floor);x.lineTo(iR+3,top);x.moveTo(iL-6,top);x.lineTo(iR+6,top);x.stroke();
+  var gt=top+14,gb=Math.max(gt+2,wSurf-3);
+  if(s.sat){x.fillStyle=css('--sat');x.globalAlpha=.10;x.fillRect(iL,gt,iR-iL,gb-gt);x.globalAlpha=1;}
+  if(wH>0.5){x.fillStyle=css('--water');x.globalAlpha=.85;x.fillRect(iL,wSurf,iR-iL,floor-wSurf);x.globalAlpha=1;}
+  var vap=Math.round(s.vp/100*N);curVap=vap;
+  var spd=lerp(28,80,Math.max(0,Math.min(1,(T-10)/40)));
+  var wt0=Math.max(wSurf+4,floor-wH+4),wb=floor-4;
+  for(var i=0;i<mols.length;i++){var m=mols[i];var want=(i<vap)?'vapor':'liquid';
+   if(m.state!==want){m.state=want;
+    if(want==='vapor'){var a1=Math.random()*6.28;m.x=iL+4+Math.random()*(iR-iL-8);m.y=gt+Math.random()*(gb-gt);m.vx=Math.cos(a1);m.vy=Math.sin(a1);}
+    else{m.x=iL+4+Math.random()*(iR-iL-8);m.y=wt0+Math.random()*Math.max(1,wb-wt0);}
+   }
+   if(m.state==='vapor'){m.x+=m.vx*spd*dt;m.y+=m.vy*spd*dt;
+    if(m.x<iL+4){m.x=iL+4;m.vx*=-1;}if(m.x>iR-4){m.x=iR-4;m.vx*=-1;}
+    if(m.y<gt){m.y=gt;m.vy*=-1;}if(m.y>gb){m.y=gb;m.vy*=-1;}
+    x.fillStyle=molCol(T);
+   }else{m.x+=(Math.random()*2-1)*7*dt*8;m.y+=(Math.random()*2-1)*7*dt*8;
+    if(m.x<iL+4)m.x=iL+4;if(m.x>iR-4)m.x=iR-4;if(m.y<wt0)m.y=wt0;if(m.y>wb)m.y=wb;
+    x.fillStyle=css('--water');
+   }
+   x.beginPath();x.arc(m.x,m.y,3,0,7);x.fill();}
+  // label arrows pointing at the particles
+  var vY=gt+(gb-gt)*0.35;arrow(x,10,vY,iL+28,vY+6,'වාෂ්ප අංශු',molCol(T));
+  if(wH>4){var lY=wSurf+(floor-wSurf)/2;arrow(x,10,lY,iL+28,lY,'ඝනීභවනය වූ ජලය',css('--water'));}
+  var tx=w*0.82,tw=12,bulbY=floor-4,br=11,tubeTop=top+10,frac=Math.max(0,Math.min(1,(T-10)/40));
+  x.strokeStyle=css('--bordS');x.lineWidth=2;x.fillStyle=css('--panel');
+  x.beginPath();x.arc(tx,bulbY,br,0,7);x.fill();x.stroke();
+  x.beginPath();x.moveTo(tx-tw/2,tubeTop);x.lineTo(tx-tw/2,bulbY);x.moveTo(tx+tw/2,tubeTop);x.lineTo(tx+tw/2,bulbY);x.arc(tx,tubeTop,tw/2,Math.PI,0);x.stroke();
+  var fillTop=tubeTop+(1-frac)*(bulbY-tubeTop);x.fillStyle=molCol(T);
+  x.beginPath();x.arc(tx,bulbY,br-3,0,7);x.fill();x.fillRect(tx-tw/2+2,fillTop,tw-4,bulbY-fillTop);
+  x.fillStyle=css('--text');x.font='600 13px sans-serif';x.textAlign='center';x.fillText(Math.round(T)+'°C',tx,tubeTop-8);
+ }
+ function graph(){var o=ctxOf(gr);if(!o)return;var x=o.x,w=o.w,h=o.h;x.clearRect(0,0,w,h);
+  var R=w-18,T0=22,B=h-48,xNeg=46,TH0=30,x0=xNeg+0.42*(R-xNeg);
+  var mX=function(t){return x0+(t/55)*(R-x0);};
+  var mY=function(p){return B-(p/110)*(B-T0);};
+  // schematic geometry (matches fig 7.8): straight asymptotes + gentle curve
+  var A={x:xNeg,y:mY(0)};                 // −273.15 convergence point
+  var S={x:mX(0),y:mY(34)};               // saturated curve start (θ=0)
+  var K={x:mX(TH0),y:mY(74)};             // kink at θ₀
+  var C={x:mX(18),y:mY(40)};              // Bézier control (gentle concave)
+  var ext=function(P){return {x:R,y:A.y+(P.y-A.y)*((R-A.x)/(P.x-A.x))};};
+  var Uend=ext(K),Lend=ext(S);            // asymptote right-edge ends
+  // axes with arrowheads
+  x.strokeStyle=css('--text');x.lineWidth=1.6;
+  x.beginPath();x.moveTo(x0,B);x.lineTo(x0,T0);x.stroke();
+  x.beginPath();x.moveTo(xNeg,B);x.lineTo(R,B);x.stroke();
+  x.fillStyle=css('--text');
+  x.beginPath();x.moveTo(x0,T0-8);x.lineTo(x0-4,T0+1);x.lineTo(x0+4,T0+1);x.closePath();x.fill();
+  x.beginPath();x.moveTo(R+8,B);x.lineTo(R-2,B-4);x.lineTo(R-2,B+4);x.closePath();x.fill();
+  // two STRAIGHT dashed asymptotes converging at −273.15
+  x.setLineDash([6,5]);x.lineWidth=1.4;x.strokeStyle=css('--line');
+  x.beginPath();x.moveTo(A.x,A.y);x.lineTo(Uend.x,Uend.y);x.stroke();
+  x.beginPath();x.moveTo(A.x,A.y);x.lineTo(Lend.x,Lend.y);x.stroke();
+  x.setLineDash([]);
+  // vertical θ₀ dashed line
+  x.strokeStyle=css('--text');x.setLineDash([6,5]);x.lineWidth=1.4;x.beginPath();x.moveTo(K.x,B);x.lineTo(K.x,K.y-4);x.stroke();x.setLineDash([]);
+  // bold p–θ curve: gentle saturated rise → kink → straight unsaturated line
+  x.strokeStyle=css('--sat');x.lineWidth=3;x.lineJoin='round';
+  x.beginPath();x.moveTo(S.x,S.y);x.quadraticCurveTo(C.x,C.y,K.x,K.y);x.lineTo(Uend.x,Uend.y);x.stroke();
+  // current-state marker (on the curve)
+  var dx,dy;
+  if(T<=TH0){var u=Math.max(0,T/TH0),iu=1-u;dx=iu*iu*S.x+2*iu*u*C.x+u*u*K.x;dy=iu*iu*S.y+2*iu*u*C.y+u*u*K.y;}
+  else{var fr=(T-TH0)/(55-TH0);dx=K.x+(Uend.x-K.x)*fr;dy=K.y+(Uend.y-K.y)*fr;}
+  x.fillStyle=css('--water');x.beginPath();x.arc(dx,dy,5,0,7);x.fill();x.strokeStyle=css('--text');x.lineWidth=1;x.stroke();
+  // labels (match fig 7.8)
+  x.fillStyle=css('--text');x.font='italic 15px serif';x.textAlign='center';x.fillText('p',x0-2,T0-11);
+  x.fillStyle=css('--sub');x.font='12px serif';x.textAlign='left';x.fillText('θ(°C)',R-34,B-7);
+  x.textAlign='center';x.font='11px sans-serif';
+  x.fillStyle=css('--sub');x.fillText('−273.15',xNeg,B+16);
+  x.fillStyle=css('--text');x.fillText('(0,0)',x0,B+16);x.fillText('θ₀',mX(TH0),B+16);
+  x.font='600 11px "Noto Sans Sinhala",sans-serif';
+  x.fillStyle=css('--accent');x.fillText('සන්තෘප්ත වාෂ්පය',x0,B+32);
+  x.fillStyle=css('--sat');x.fillText('අසන්තෘප්ත වාෂ්පය',mX(TH0),B+32);
+ }
+ function stats(){var s=st(T);stEl.innerHTML=chip('උෂ්ණත්වය',Math.round(s.T)+' °C')+chip('වාෂ්ප ස්කන්ධය',Math.round(s.vp)+' g')+chip('ජල ස්කන්ධය',Math.round(s.wt)+' g')+chip('ඝනත්වය',s.d.toFixed(1)+' g/m³')+chip('උපරිම වාෂ්ප ඝනත්වය',maxDens(T).toFixed(1)+' g/m³')+chip('වාෂ්ප පීඩනය P',Math.round(s.P))+chip('වාෂ්ප අංශු',curVap)+chip('ජල අංශු',(N-curVap))+chip('තත්ත්වය',s.sat?'සන්තෘප්ත':'අසන්තෘප්ත');slv.textContent=Math.round(s.T)+' °C';}
+ function btn(){py.textContent=play?'❚❚ විරාමය':'▶ ධාවනය';}
+ function loop(){var now=performance.now(),dt=Math.min(0.05,(now-lastF)/1000);if(play){T-=dt*4;if(T<=10){T=10;play=false;btn();}sl.value=T;}scene(dt);if(!gHidden)graph();stats();lastF=now;requestAnimationFrame(loop);}
+ py.onclick=function(){if(T<=10)T=50;play=!play;btn();};
+ rs.onclick=function(){T=50;play=false;btn();sl.value=50;};
+ sl.oninput=function(){T=+sl.value;play=false;btn();};
+ tg.onclick=function(){gHidden=!gHidden;graphDiv.style.display=gHidden?'none':'';tg.textContent=gHidden?'Show Graph':'Hide Graph';};
+ btn();requestAnimationFrame(loop);
+})();
+
+/* tabs */
+document.querySelectorAll('.tab').forEach(function(b){
+ b.onclick=function(){
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('on');});
+  document.querySelectorAll('.pane').forEach(function(p){p.classList.remove('on');});
+  b.classList.add('on');document.getElementById('pane'+b.dataset.pane).classList.add('on');
+ };
+});
+</script>
+</body>
+</html>
